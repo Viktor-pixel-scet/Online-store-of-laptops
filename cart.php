@@ -127,6 +127,7 @@ foreach ($cart_items as $item) {
     <title>Кошик - Ноутбук-Маркет</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="public/assets/style.css" rel="stylesheet">
+    <link href="public/assets/gallery.css" rel="stylesheet">
 </head>
 <body>
 
