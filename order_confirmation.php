@@ -33,7 +33,6 @@ try {
     $stmt->execute([$order_data['id']]);
     $order_items = $stmt->fetchAll();
 
-    // Format data for the view
     $order = [
         'total_price' => $order_data['total_amount'],
         'customer' => [

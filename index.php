@@ -59,6 +59,71 @@ try {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
     <link href="public/assets/style.css" rel="stylesheet">
 </head>
+<style>
+    .card-body {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .card-body .card-title {
+        margin-bottom: 0.5rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .card-body .card-text {
+        flex-grow: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        margin-bottom: 0.75rem;
+    }
+
+    .card-body .d-flex {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+    }
+
+    .card-body .btn-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        justify-content: space-between;
+    }
+
+    .card-body .btn-group .btn {
+        flex-grow: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.375rem 0.5rem;
+        font-size: 0.875rem;
+    }
+
+    .card-body .btn-group .btn i {
+        margin-right: 0.25rem;
+    }
+
+    .card-body .h5.text-primary {
+        text-align: center;
+        margin-bottom: 0.5rem;
+    }
+
+    @media (max-width: 768px) {
+        .card-body .btn-group {
+            flex-direction: column;
+        }
+
+        .card-body .btn-group .btn {
+            width: 100%;
+        }
+    }
+</style>
 <body>
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
@@ -100,6 +165,9 @@ try {
                                     <?php echo number_format($product['price'], 2, '.', ' '); ?> грн
                                 </span>
                                 <div class="btn-group">
+                                    <a href="product.php?id=<?php echo $product['id']; ?>" class="btn btn-outline-secondary me-2">
+                                        <i class="bi bi-info-circle"></i> Детальніше
+                                    </a>
                                     <button
                                             type="button"
                                             class="btn btn-outline-secondary compare-toggle"
