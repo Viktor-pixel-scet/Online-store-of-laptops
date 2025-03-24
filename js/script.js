@@ -1,5 +1,107 @@
 document.addEventListener('DOMContentLoaded', function() {
     const addToCartButtons = document.querySelectorAll('a[href^="cart.php?action=add"]');
+    const comparisonList = document.querySelector('.comparison-list');
+    const compareModal = document.getElementById('compareModal') ? new bootstrap.Modal(document.getElementById('compareModal')) : null;
+    const compareButtons = document.querySelectorAll('.compare-toggle');
+    const fullCompareLink = document.getElementById('full-compare-link');
+
+    let productComparison = JSON.parse(localStorage.getItem('productComparison') || '[]');
+
+    function updateComparisonUI() {
+        // Оновлення кнопок на сторінці
+        compareButtons.forEach(button => {
+            const productId = button.getAttribute('data-product-id');
+            button.classList.toggle('active', productComparison.includes(productId));
+        });
+
+        if (comparisonList) {
+            comparisonList.innerHTML = productComparison.map(id => {
+                const product = document.querySelector(`.compare-toggle[data-product-id="${id}"]`);
+                return product ? `
+                    <div class="col-3 mb-3">
+                        <div class="card">
+                            <div class="card-body d-flex justify-content-between align-items-center">
+                                ${product.getAttribute('data-product-name')}
+                                <div>
+                                    <button class="btn btn-sm btn-danger remove-compare me-2" data-product-id="${id}">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-secondary add-more-compare" data-product-id="${id}">
+                                        <i class="bi bi-plus-square"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                ` : '';
+            }).join('');
+
+            document.querySelectorAll('.remove-compare').forEach(button => {
+                button.addEventListener('click', function() {
+                    const productId = this.getAttribute('data-product-id');
+                    productComparison = productComparison.filter(id => id !== productId);
+                    localStorage.setItem('productComparison', JSON.stringify(productComparison));
+                    updateComparisonUI();
+                });
+            });
+
+            document.querySelectorAll('.add-more-compare').forEach(button => {
+                button.addEventListener('click', function() {
+                    const currentProductId = this.getAttribute('data-product-id');
+                    const compareAddButtons = Array.from(compareButtons)
+                        .filter(btn => !productComparison.includes(btn.getAttribute('data-product-id')));
+
+                    if (compareAddButtons.length > 0) {
+                        compareAddButtons[0].click();
+                    } else {
+                        alert('Максимум 4 товари для порівняння');
+                    }
+                });
+            });
+
+            if (fullCompareLink) {
+                if (productComparison.length > 0) {
+                    fullCompareLink.href = `compare.php?products=${productComparison.join(',')}`;
+                    fullCompareLink.classList.remove('disabled');
+                } else {
+                    fullCompareLink.classList.add('disabled');
+                }
+            }
+
+            const compareCountBadge = document.getElementById('compare-count');
+            if (compareCountBadge) {
+                compareCountBadge.textContent = productComparison.length;
+            }
+        }
+    }
+
+    compareButtons.forEach(button => {
+        button.addEventListener('click', function(event) {
+            event.preventDefault();
+
+            const productId = this.getAttribute('data-product-id');
+            const productName = this.getAttribute('data-product-name');
+
+            if (productComparison.includes(productId)) {
+                productComparison = productComparison.filter(id => id !== productId);
+            } else if (productComparison.length < 4) {
+                productComparison.push(productId);
+            } else {
+                alert('Максимум 4 товари для порівняння');
+                return;
+            }
+
+            // Оновлення localStorage
+            localStorage.setItem('productComparison', JSON.stringify(productComparison));
+            updateComparisonUI();
+
+            if (compareModal && productComparison.length > 0) {
+                compareModal.show();
+            }
+        });
+    });
+
+    updateComparisonUI();
 
     addToCartButtons.forEach(button => {
         button.addEventListener('click', function(event) {
