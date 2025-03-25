@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once 'db_connection.php';
+require_once '../../backend/database/db_connection.php';
 
 if (!isset($_SESSION['cart']) || empty($_SESSION['cart'])) {
     header('Location: cart.php');
@@ -119,20 +119,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Оформлення замовлення - Ноутбук-Маркет</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="public/assets/style.css" rel="stylesheet">
-    <link href="public/assets/gallery.css" rel="stylesheet">
+    <link href="../../public/assets/css/style.css" rel="stylesheet">
+    <link href="../../public/assets/css/gallery.css" rel="stylesheet">
 </head>
 <body>
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container">
-        <a class="navbar-brand" href="index.php">Ноутбук-Маркет</a>
+        <a class="navbar-brand" href="../../index.php">Ноутбук-Маркет</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav me-auto">
                 <li class="nav-item">
-                    <a class="nav-link" href="index.php">Головна</a>
+                    <a class="nav-link" href="../../index.php">Головна</a>
                 </li>
             </ul>
             <ul class="navbar-nav">
@@ -280,6 +280,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="js/script.js"></script>
+<script src="../../public/js/script.js"></script>
 </body>
 </html>

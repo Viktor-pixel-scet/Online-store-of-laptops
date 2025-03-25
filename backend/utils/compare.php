@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once 'db_connection.php';
+require_once '../../backend/database/db_connection.php';
 
 $product_ids = isset($_GET['products']) ? explode(',', $_GET['products']) : [];
 $product_ids = array_map('intval', $product_ids);
@@ -78,7 +78,7 @@ if (!empty($product_ids)) {
     <?php endif; ?>
 
     <div class="mt-3">
-        <a href="index.php" class="btn btn-secondary">Назад до каталогу</a>
+        <a href="../../index.php" class="btn btn-secondary">Назад до каталогу</a>
     </div>
 </div>
 

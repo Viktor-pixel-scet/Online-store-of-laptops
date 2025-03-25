@@ -8,7 +8,6 @@ document.addEventListener('DOMContentLoaded', function() {
     let productComparison = JSON.parse(localStorage.getItem('productComparison') || '[]');
 
     function updateComparisonUI() {
-        // Update buttons on the page
         compareButtons.forEach(button => {
             const productId = button.getAttribute('data-product-id');
             button.classList.toggle('active', productComparison.includes(productId));
@@ -126,26 +125,26 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     function fetchGamesForTesting() {
-        fetch('get-games.php')
+        fetch('backend/products/get-games.php')
             .then(response => {
                 if (!response.ok) {
-                    throw new Error('Network response was not ok');
+                    throw new Error('Реакція мережі була незадовільною');
                 }
                 return response.json();
             })
             .then(games => {
-                console.log('Games fetched:', games);
+                console.log('Ігри принесли:', games);
                 updateGameTestModal(games);
             })
             .catch(error => {
-                console.error('Error fetching games:', error);
+                console.error('Ігри, що виводять помилки:', error);
                 const gameCheckboxContainer = document.querySelector('#performanceTestModal .card-body');
                 if (gameCheckboxContainer) {
                     gameCheckboxContainer.innerHTML = `
-                        <div class="alert alert-danger">
-                            Помилка завантаження ігор: ${error.message}
-                        </div>
-                    `;
+                    <div class="alert alert-danger">
+                        Помилка завантаження ігор: ${error.message}
+                    </div>
+                `;
                 }
             });
     }
@@ -154,7 +153,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const gameCheckboxContainer = document.querySelector('#performanceTestModal .card-body');
 
         if (!gameCheckboxContainer) {
-            console.error('Game checkbox container not found');
+            console.error('Контейнер з ігровими чекбоксами не знайдено');
             return;
         }
 

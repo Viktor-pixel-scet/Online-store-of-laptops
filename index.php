@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once 'db_connection.php';
+require_once 'backend/database/db_connection.php';
 
 if (!isset($_SESSION['cart'])) {
     $_SESSION['cart'] = [];
@@ -91,7 +91,7 @@ try {
     <title>Ноутбук-Маркет - Головна</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
-    <link href="public/assets/style.css" rel="stylesheet">
+    <link href="public/assets/css/style.css" rel="stylesheet">
     <style>
         .card-body {
             display: flex;
@@ -273,11 +273,11 @@ try {
     <div class="container">
         <a class="navbar-brand" href="index.php">Ноутбук-Маркет</a>
         <div class="navbar-nav ms-auto">
-            <a class="nav-link" href="cart.php">
+            <a class="nav-link" href="backend/orders/cart.php">
                 Кошик
                 <span class="badge bg-primary"><?php echo count($_SESSION['cart']); ?></span>
             </a>
-            <a class="nav-link disabled" href="compare.php" id="compare-link">
+            <a class="nav-link disabled" href="backend/utils/compare.php" id="compare-link">
                 Порівняти
                 <span class="badge bg-secondary" id="compare-count">0</span>
             </a>
@@ -373,7 +373,7 @@ try {
                                             <?php echo number_format($product['price'], 2, '.', ' '); ?> грн
                                         </span>
                                         <div class="btn-group">
-                                            <a href="product.php?id=<?php echo $product['id']; ?>" class="btn btn-outline-secondary me-2">
+                                            <a href="backend/products/product.php?id=<?php echo $product['id']; ?>" class="btn btn-outline-secondary me-2">
                                                 <i class="bi bi-info-circle"></i> Детальніше
                                             </a>
                                             <button
@@ -385,7 +385,7 @@ try {
                                                 <i class="bi bi-plus-square"></i> Порівняти
                                             </button>
                                             <a
-                                                    href="cart.php?action=add&id=<?php echo $product['id']; ?>"
+                                                    href="backend/orders/cart.php?action=add&id=<?php echo $product['id']; ?>"
                                                     class="btn btn-primary"
                                             >
                                                 <i class="bi bi-cart-plus"></i> В кошик
@@ -414,14 +414,14 @@ try {
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрити</button>
-                <a href="compare.php" class="btn btn-primary disabled" id="full-compare-link">Повна таблиця порівняння</a>
+                <a href="backend/utils/compare.php" class="btn btn-primary disabled" id="full-compare-link">Повна таблиця порівняння</a>
             </div>
         </div>
     </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="js/script.js"></script>
-<script src="js/advanced-filter.js"></script>
+<script src="public/js/script.js"></script>
+<script src="public/js/advanced-filter.js"></script>
 </body>
 </html>
