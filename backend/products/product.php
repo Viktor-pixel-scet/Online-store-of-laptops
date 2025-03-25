@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once 'db_connection.php';
+require_once '../../backend/database/db_connection.php';
 
 if (!isset($_SESSION['cart'])) {
     $_SESSION['cart'] = [];
@@ -23,7 +23,7 @@ try {
         exit;
     }
 } catch (PDOException $e) {
-    error_log('Database error: ' . $e->getMessage());
+    error_log('Помилка бази даних: ' . $e->getMessage());
     header('Location: index.php');
     exit;
 }
@@ -36,26 +36,26 @@ try {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo htmlspecialchars($product['name']); ?> - Ноутбук-Маркет</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="public/assets/style.css" rel="stylesheet">
-    <link href="public/assets/gallery.css" rel="stylesheet">
+    <link href="../../public/assets/css/style.css" rel="stylesheet">
+    <link href="../../public/assets/css/gallery.css" rel="stylesheet">
 </head>
 <body>
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container">
-        <a class="navbar-brand" href="index.php">Ноутбук-Маркет</a>
+        <a class="navbar-brand" href="../../index.php">Ноутбук-Маркет</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav me-auto">
                 <li class="nav-item">
-                    <a class="nav-link" href="index.php">Головна</a>
+                    <a class="nav-link" href="../../index.php">Головна</a>
                 </li>
             </ul>
             <ul class="navbar-nav">
                 <li class="nav-item">
-                    <a class="nav-link" href="cart.php">
+                    <a class="nav-link" href="../orders/cart.php">
                         Кошик
                         <span class="badge bg-primary">
                             <?php echo count($_SESSION['cart']); ?>
@@ -86,14 +86,14 @@ try {
             <?php if ($product['stock'] > 0): ?>
                 <p class="text-success">В наявності: <?php echo $product['stock']; ?> шт.</p>
                 <div class="d-grid gap-2">
-                    <a href="cart.php?action=add&id=<?php echo $product['id']; ?>" class="btn btn-primary btn-lg">Додати в кошик</a>
-                    <a href="index.php" class="btn btn-outline-secondary">Повернутися до списку товарів</a>
+                    <a href="../orders/cart.php?action=add&id=<?php echo $product['id']; ?>" class="btn btn-primary btn-lg">Додати в кошик</a>
+                    <a href="../../index.php" class="btn btn-outline-secondary">Повернутися до списку товарів</a>
                 </div>
             <?php else: ?>
                 <p class="text-danger">Немає в наявності</p>
                 <div class="d-grid gap-2">
                     <button class="btn btn-secondary btn-lg" disabled>Додати в кошик</button>
-                    <a href="index.php" class="btn btn-outline-secondary">Повернутися до списку товарів</a>
+                    <a href="../../index.php" class="btn btn-outline-secondary">Повернутися до списку товарів</a>
                 </div>
             <?php endif; ?>
         </div>
@@ -123,6 +123,6 @@ try {
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="js/script.js"></script>
+<script src="../../public/js/script.js"></script>
 </body>
 </html>

@@ -1,5 +1,5 @@
 <?php
-require_once 'db_connection.php';
+require_once '../../backend/database/db_connection.php';
 
 header('Content-Type: application/json');
 
@@ -12,7 +12,7 @@ try {
 } catch(PDOException $e) {
     http_response_code(500);
     echo json_encode([
-        'error' => 'Database error',
+        'error' => 'Помилка бази даних',
         'message' => $e->getMessage()
     ]);
 }

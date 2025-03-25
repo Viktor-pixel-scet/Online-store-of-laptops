@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once 'db_connection.php';
+require_once '../../backend/database/db_connection.php';
 
 if (!isset($_SESSION['cart']) || empty($_SESSION['cart']) || !isset($_SESSION['order']) || empty($_SESSION['order'])) {
     header('Location: cart.php');
