@@ -7,12 +7,14 @@ if (!isset($_SESSION['cart'])) {
 }
 
 $min_price = 0;
-$max_price = PHP_INT_MAX;
+$max_price = 100000;
 $screen_sizes = [];
 $video_card_types = [];
 $storage_types = [];
 $min_weight = 0;
 $max_weight = 10;
+
+
 
 if (isset($_GET['min_price']) && is_numeric($_GET['min_price'])) {
     $min_price = floatval($_GET['min_price']);
@@ -362,9 +364,9 @@ try {
                     <?php foreach ($products as $product): ?>
                         <div class="col-md-4 mb-4">
                             <div class="card h-100">
-                                <img src="<?php echo htmlspecialchars($product['image_filename']); ?>"
+                                <img src="<?php echo htmlspecialchars($product['image_filename'] ?? ''); ?>"
                                      class="card-img-top"
-                                     alt="<?php echo htmlspecialchars($product['name']); ?>">
+                                     alt="<?php echo htmlspecialchars($product['name'] ?? ''); ?>">
                                 <div class="card-body">
                                     <h5 class="card-title"><?php echo htmlspecialchars($product['name']); ?></h5>
                                     <p class="card-text"><?php echo htmlspecialchars($product['description']); ?></p>
@@ -421,7 +423,7 @@ try {
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="public/js/script.js"></script>
-<script src="public/js/advanced-filter.js"></script>
+<script src="public/assets/js/script.js"></script>
+<script src="public/assets/js/advanced-filter.js"></script>
 </body>
 </html>
