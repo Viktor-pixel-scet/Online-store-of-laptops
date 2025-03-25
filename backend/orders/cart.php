@@ -159,7 +159,6 @@ foreach ($cart_items as $item) {
 
 <div class="container my-5">
     <h1 class="mb-4">Кошик</h1>
-
     <?php if (isset($_SESSION['error'])): ?>
         <div class="alert alert-danger">
             <?php echo $_SESSION['error']; ?>
@@ -240,6 +239,6 @@ foreach ($cart_items as $item) {
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="../../public/js/script.js"></script>
+<script src="../../public/assets/js/script.js"></script>
 </body>
 </html>

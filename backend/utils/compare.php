@@ -1,21 +1,46 @@
 <?php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 session_start();
-require_once '../../backend/database/db_connection.php';
 
-$product_ids = isset($_GET['products']) ? explode(',', $_GET['products']) : [];
-$product_ids = array_map('intval', $product_ids);
+try {
+    require_once '../../backend/database/db_connection.php';
 
-$products = [];
-if (!empty($product_ids)) {
-    $placeholders = implode(',', array_fill(0, count($product_ids), '?'));
-    $stmt = $pdo->prepare("
-        SELECT p.*, 
-        (SELECT image_filename FROM product_images WHERE product_id = p.id LIMIT 1) as image_filename 
-        FROM products p 
-        WHERE id IN ($placeholders)
-    ");
-    $stmt->execute($product_ids);
-    $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $product_ids = isset($_GET['products']) ? explode(',', $_GET['products']) : [];
+    $product_ids = array_map(function($id) {
+        $sanitized_id = filter_var($id, FILTER_VALIDATE_INT);
+        if ($sanitized_id === false) {
+            throw new Exception('Некоректний ідентифікатор товару');
+        }
+        return $sanitized_id;
+    }, $product_ids);
+
+    $products = [];
+    if (!empty($product_ids)) {
+        try {
+            $placeholders = implode(',', array_fill(0, count($product_ids), '?'));
+            $stmt = $pdo->prepare("
+                SELECT p.*, 
+                (SELECT image_filename FROM product_images WHERE product_id = p.id LIMIT 1) as image_filename 
+                FROM products p 
+                WHERE id IN ($placeholders)
+            ");
+            $stmt->execute($product_ids);
+            $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            if ($stmt->rowCount() === 0) {
+                throw new Exception('Товари не знайдені');
+            }
+        } catch (PDOException $e) {
+            error_log('Помилка бази даних: ' . $e->getMessage());
+            throw new Exception('Не вдалося отримати дані про товари');
+        }
+    }
+} catch (Exception $e) {
+    error_log('Помилка в скрипті порівняння: ' . $e->getMessage());
+
+    $error_message = $e->getMessage();
 }
 ?>
 <!DOCTYPE html>
@@ -31,7 +56,12 @@ if (!empty($product_ids)) {
 <div class="container mt-5">
     <h1 class="mb-4">Порівняння ноутбуків</h1>
 
-    <?php if (empty($products)): ?>
+    <?php if (isset($error_message)): ?>
+        <div class="alert alert-danger">
+            <?php echo htmlspecialchars($error_message); ?>
+            <p>Виникла технічна проблема. Будь ласка, спробуйте пізніше або зв'яжіться з підтримкою.</p>
+        </div>
+    <?php elseif (empty($products)): ?>
         <div class="alert alert-info">Немає товарів для порівняння</div>
     <?php else: ?>
         <div class="table-responsive">
@@ -52,9 +82,13 @@ if (!empty($product_ids)) {
                     <th>Зображення</th>
                     <?php foreach ($products as $product): ?>
                         <th>
-                            <img src="<?php echo htmlspecialchars($product['image_filename']); ?>"
-                                 alt="<?php echo htmlspecialchars($product['name']); ?>"
-                                 class="img-fluid" style="max-height: 200px;">
+                            <?php if (!empty($product['image_filename'])): ?>
+                                <img src="<?php echo htmlspecialchars($product['image_filename']); ?>"
+                                     alt="<?php echo htmlspecialchars($product['name']); ?>"
+                                     class="img-fluid" style="max-height: 200px;">
+                            <?php else: ?>
+                                <p>Зображення відсутнє</p>
+                            <?php endif; ?>
                         </th>
                     <?php endforeach; ?>
                 </tr>
@@ -69,7 +103,7 @@ if (!empty($product_ids)) {
                 <tr>
                     <td>Опис</td>
                     <?php foreach ($products as $product): ?>
-                        <td><?php echo htmlspecialchars($product['description']); ?></td>
+                        <td><?php echo !empty($product['description']) ? htmlspecialchars($product['description']) : 'Опис відсутній'; ?></td>
                     <?php endforeach; ?>
                 </tr>
                 </tbody>
@@ -89,21 +123,40 @@ if (!empty($product_ids)) {
 
         removeButtons.forEach(button => {
             button.addEventListener('click', function() {
-                const productId = this.getAttribute('data-product-id');
+                try {
+                    const productId = this.getAttribute('data-product-id');
 
-                const comparisonList = JSON.parse(localStorage.getItem('productComparison') || '[]');
-                const updatedList = comparisonList.filter(id => id != productId);
-                localStorage.setItem('productComparison', JSON.stringify(updatedList));
+                    let comparisonList;
+                    try {
+                        comparisonList = JSON.parse(localStorage.getItem('productComparison') || '[]');
+                    } catch (e) {
+                        console.error('Помилка читання localStorage:', e);
+                        comparisonList = [];
+                    }
 
-                const currentProducts = new URLSearchParams(window.location.search).get('products');
-                const newProducts = currentProducts.split(',')
-                    .filter(id => id != productId)
-                    .join(',');
+                    const updatedList = comparisonList.filter(id => id != productId);
 
-                if (newProducts) {
-                    window.location.href = `compare.php?products=${newProducts}`;
-                } else {
-                    window.location.href = 'index.php';
+                    try {
+                        localStorage.setItem('productComparison', JSON.stringify(updatedList));
+                    } catch (e) {
+                        console.error('Помилка запису в localStorage:', e);
+                        alert('Не вдалося оновити список порівняння');
+                        return;
+                    }
+
+                    const currentProducts = new URLSearchParams(window.location.search).get('products');
+                    const newProducts = currentProducts.split(',')
+                        .filter(id => id != productId)
+                        .join(',');
+
+                    if (newProducts) {
+                        window.location.href = `compare.php?products=${newProducts}`;
+                    } else {
+                        window.location.href = 'index.php';
+                    }
+                } catch (e) {
+                    console.error('Критична помилка:', e);
+                    alert('Виникла непередбачена помилка');
                 }
             });
         });
