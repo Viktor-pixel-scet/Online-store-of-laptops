@@ -14,8 +14,6 @@ $storage_types = [];
 $min_weight = 0;
 $max_weight = 10;
 
-
-
 if (isset($_GET['min_price']) && is_numeric($_GET['min_price'])) {
     $min_price = floatval($_GET['min_price']);
 }
@@ -404,14 +402,16 @@ try {
     </div>
 </div>
 
-<div class="modal fade" id="compareModal" tabindex="-1">
+<div class="modal fade" id="compareModal" tabindex="-1" role="dialog" aria-labelledby="compareModalTitle" aria-describedby="compareModalDescription">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Товари для порівняння</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <h5 class="modal-title" id="compareModalTitle">Товари для порівняння</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрити">
+                    <span aria-hidden="true">&times;</span>
+                </button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body" id="compareModalDescription">
                 <div class="comparison-list row"></div>
             </div>
             <div class="modal-footer">

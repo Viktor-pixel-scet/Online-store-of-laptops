@@ -101,6 +101,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 this.updateComparisonList();
                 this.updateFullCompareLink();
                 this.updateCompareCountBadge();
+                this.updateCompareLink();
             } catch (error) {
                 ErrorHandler.logError('compareProducts', error);
             }
@@ -165,9 +166,13 @@ document.addEventListener('DOMContentLoaded', function() {
         updateCompareLink: function() {
             const compareLink = document.getElementById('compare-link');
             if (compareLink) {
-                compareLink.classList.toggle('disabled', this.productComparison.length === 0);
+                if (this.productComparison.length === 0) {
+                    compareLink.classList.add('disabled');
+                } else {
+                    compareLink.classList.remove('disabled');
+                }
             }
-        }
+        },
     };
 
     const GameTestManager = {
