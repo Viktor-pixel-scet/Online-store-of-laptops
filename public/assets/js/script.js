@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     const ErrorHandler = {
         logError: function(context, error) {
-            console.error(`[${context}] Error:`, error);
+            console.error(`[${context}] Помилка:`, error);
             this.displayUserFriendlyError(context, error);
         },
         displayUserFriendlyError: function(context, error) {
@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     const ProductComparisonManager = {
-        MAX_COMPARISON_ITEMS: 4,
+        MAX_COMPARISON_ITEMS: 13,
         init: function() {
             this.comparisonList = document.querySelector('.comparison-list');
             this.compareButtons = document.querySelectorAll('.compare-toggle');
@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else if (this.productComparison.length < this.MAX_COMPARISON_ITEMS) {
                     this.addToComparison(productId);
                 } else {
-                    alert('Максимум 4 товари для порівняння');
+                    alert('Максимум 13 товари для порівняння');
                     return;
                 }
 
@@ -101,6 +101,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 this.updateComparisonList();
                 this.updateFullCompareLink();
                 this.updateCompareCountBadge();
+                this.updateCompareLink();
             } catch (error) {
                 ErrorHandler.logError('compareProducts', error);
             }
@@ -165,9 +166,15 @@ document.addEventListener('DOMContentLoaded', function() {
         updateCompareLink: function() {
             const compareLink = document.getElementById('compare-link');
             if (compareLink) {
-                compareLink.classList.toggle('disabled', this.productComparison.length === 0);
+                if (this.productComparison.length === 0) {
+                    compareLink.classList.add('disabled');
+                    compareLink.href = 'backend/utils/compare.php';
+                } else {
+                    compareLink.classList.remove('disabled');
+                    compareLink.href = `backend/utils/compare.php?products=${this.productComparison.join(',')}`;
+                }
             }
-        }
+        },
     };
 
     const GameTestManager = {
@@ -405,3 +412,45 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     initializeManagers();
 });
+
+function changeMainImage(thumbnail) {
+    const mainImage = document.querySelector('.main-product-image');
+    mainImage.src = thumbnail.src;
+}
+
+function changeQuantity(delta) {
+    const quantityInput = document.getElementById('quantity');
+    let currentValue = parseInt(quantityInput.value);
+    let newValue = currentValue + delta;
+
+    if (newValue >= parseInt(quantityInput.min) && newValue <= parseInt(quantityInput.max)) {
+        quantityInput.value = newValue;
+    }
+}
+
+function initImageZoom() {
+    const zoomContainer = document.querySelector('.image-zoom-container');
+    const zoomTargets = [
+        document.querySelector('.main-product-image'),
+        ...document.querySelectorAll('.image-thumbnails img')
+    ];
+
+    zoomTargets.forEach(target => {
+        target.addEventListener('mousemove', function(e) {
+            const rect = this.getBoundingClientRect();
+            const x = (e.clientX - rect.left) / rect.width * 100;
+            const y = (e.clientY - rect.top) / rect.height * 100;
+
+            zoomContainer.style.backgroundImage = `url(${this.src})`;
+            zoomContainer.style.backgroundPosition = `${x}% ${y}%`;
+            zoomContainer.style.backgroundSize = '500%';
+            zoomContainer.style.opacity = '1';
+        });
+
+        target.addEventListener('mouseleave', function() {
+            zoomContainer.style.opacity = '0';
+        });
+    });
+}
+
+document.addEventListener('DOMContentLoaded', initImageZoom);

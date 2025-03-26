@@ -16,36 +16,59 @@ if (isset($_GET['action']) && isset($_GET['id'])) {
 
         if ($product) {
             if ($_GET['action'] === 'add') {
-                $found = false;
+                $product_id = intval($_GET['id']);
+                $quantity = isset($_GET['quantity']) ? intval($_GET['quantity']) : 1;
 
-                foreach ($_SESSION['cart'] as &$item) {
-                    if ($item['id'] == $product_id) {
-                        // Check if requested quantity is available
-                        if ($item['quantity'] < $product['stock']) {
-                            $item['quantity']++;
-                        } else {
+                try {
+                    $stmt = $pdo->prepare("SELECT * FROM products WHERE id = ?");
+                    $stmt->execute([$product_id]);
+                    $product = $stmt->fetch();
+
+                    if ($product) {
+                        if ($quantity > $product['stock']) {
                             $_SESSION['error'] = "На жаль, на складі доступно лише {$product['stock']} шт.";
+                            $quantity = $product['stock'];
                         }
-                        $found = true;
-                        break;
-                    }
-                }
 
-                if (!$found) {
-                    if ($product['stock'] > 0) {
-                        $_SESSION['cart'][] = [
-                            'id' => $product['id'],
-                            'name' => $product['name'],
-                            'price' => $product['price'],
-                            'quantity' => 1
-                        ];
-                    } else {
-                        $_SESSION['error'] = "Товар тимчасово відсутній на складі.";
-                    }
-                }
+                        $found = false;
+                        foreach ($_SESSION['cart'] as &$item) {
+                            if ($item['id'] == $product_id) {
+                                $total_requested = $item['quantity'] + $quantity;
 
-                header('Location: cart.php');
-                exit;
+                                if ($total_requested <= $product['stock']) {
+                                    $item['quantity'] += $quantity;
+                                } else {
+                                    $_SESSION['error'] = "На жаль, на складі доступно лише {$product['stock']} шт.";
+                                    $item['quantity'] = $product['stock'];
+                                }
+
+                                $found = true;
+                                break;
+                            }
+                        }
+
+                        if (!$found) {
+                            if ($product['stock'] >= $quantity) {
+                                $_SESSION['cart'][] = [
+                                    'id' => $product['id'],
+                                    'name' => $product['name'],
+                                    'price' => $product['price'],
+                                    'quantity' => $quantity
+                                ];
+                            } else {
+                                $_SESSION['error'] = "Товар тимчасово відсутній на складі.";
+                            }
+                        }
+
+                        header('Location: cart.php');
+                        exit;
+                    }
+                } catch (PDOException $e) {
+                    error_log('Error processing cart action: ' . $e->getMessage());
+                    $_SESSION['error'] = "Виникла помилка при обробці вашого запиту.";
+                    header('Location: cart.php');
+                    exit;
+                }
             }
 
             if ($_GET['action'] === 'remove') {
@@ -159,6 +182,7 @@ foreach ($cart_items as $item) {
 
 <div class="container my-5">
     <h1 class="mb-4">Кошик</h1>
+
     <?php if (isset($_SESSION['error'])): ?>
         <div class="alert alert-danger">
             <?php echo $_SESSION['error']; ?>

@@ -51,10 +51,19 @@ try {
     <title>Порівняння товарів</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .table-compare th, .table-compare td {
+            vertical-align: middle;
+            text-align: center;
+        }
+        .table-compare thead th {
+            background-color: #f8f9fa;
+        }
+    </style>
 </head>
 <body>
-<div class="container mt-5">
-    <h1 class="mb-4">Порівняння ноутбуків</h1>
+<div class="container-fluid mt-5">
+    <h1 class="mb-4 text-center">Порівняння ноутбуків</h1>
 
     <?php if (isset($error_message)): ?>
         <div class="alert alert-danger">
@@ -65,7 +74,7 @@ try {
         <div class="alert alert-info">Немає товарів для порівняння</div>
     <?php else: ?>
         <div class="table-responsive">
-            <table class="table table-bordered table-striped">
+            <table class="table table-bordered table-striped table-hover table-compare">
                 <thead>
                 <tr>
                     <th>Параметр</th>
@@ -94,16 +103,49 @@ try {
                 </tr>
                 </thead>
                 <tbody>
+                <!-- Basic Information -->
                 <tr>
-                    <td>Ціна</td>
+                    <td class="fw-bold">Ціна</td>
                     <?php foreach ($products as $product): ?>
                         <td><?php echo number_format($product['price'], 2, '.', ' '); ?> грн</td>
                     <?php endforeach; ?>
                 </tr>
                 <tr>
-                    <td>Опис</td>
+                    <td class="fw-bold">Опис</td>
                     <?php foreach ($products as $product): ?>
                         <td><?php echo !empty($product['description']) ? htmlspecialchars($product['description']) : 'Опис відсутній'; ?></td>
+                    <?php endforeach; ?>
+                </tr>
+
+                <!-- Technical Specifications -->
+                <tr>
+                    <td class="fw-bold">Екран</td>
+                    <?php foreach ($products as $product): ?>
+                        <td><?php echo htmlspecialchars($product['screen_size']); ?> дюймів</td>
+                    <?php endforeach; ?>
+                </tr>
+                <tr>
+                    <td class="fw-bold">Відеокарта</td>
+                    <?php foreach ($products as $product): ?>
+                        <td><?php echo htmlspecialchars($product['video_card_type']); ?></td>
+                    <?php endforeach; ?>
+                </tr>
+                <tr>
+                    <td class="fw-bold">Тип накопичувача</td>
+                    <?php foreach ($products as $product): ?>
+                        <td><?php echo htmlspecialchars($product['storage_type']); ?></td>
+                    <?php endforeach; ?>
+                </tr>
+                <tr>
+                    <td class="fw-bold">Вага</td>
+                    <?php foreach ($products as $product): ?>
+                        <td><?php echo htmlspecialchars($product['device_weight']); ?> кг</td>
+                    <?php endforeach; ?>
+                </tr>
+                <tr>
+                    <td class="fw-bold">Наявність на складі</td>
+                    <?php foreach ($products as $product): ?>
+                        <td><?php echo htmlspecialchars($product['stock']); ?> шт.</td>
                     <?php endforeach; ?>
                 </tr>
                 </tbody>
@@ -111,7 +153,7 @@ try {
         </div>
     <?php endif; ?>
 
-    <div class="mt-3">
+    <div class="mt-3 text-center">
         <a href="../../index.php" class="btn btn-secondary">Назад до каталогу</a>
     </div>
 </div>
