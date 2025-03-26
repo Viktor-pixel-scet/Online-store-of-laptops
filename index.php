@@ -178,7 +178,6 @@ try {
 
         }
 
-        /* Price and Weight Filters */
         #advanced-filter .input-group {
             gap: 10px;
         }
@@ -361,7 +360,7 @@ try {
                 <?php else: ?>
                     <?php foreach ($products as $product): ?>
                         <div class="col-md-4 mb-4">
-                            <div class="card h-100">
+                            <div class="card h-100" data-product-id="<?php echo $product['id']; ?>">
                                 <img src="<?php echo htmlspecialchars($product['image_filename'] ?? ''); ?>"
                                      class="card-img-top"
                                      alt="<?php echo htmlspecialchars($product['name'] ?? ''); ?>">
@@ -391,6 +390,14 @@ try {
                                                 <i class="bi bi-cart-plus"></i> В кошик
                                             </a>
                                         </div>
+                                    </div>
+                                    <div class="mt-2 text-center">
+                                        <button
+                                                type="button"
+                                                class="btn btn-outline-info performance-test-btn w-100"
+                                        >
+                                            <i class="bi bi-controller"></i> Тест продуктивності
+                                        </button>
                                     </div>
                                 </div>
                             </div>

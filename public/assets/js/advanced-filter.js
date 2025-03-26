@@ -165,12 +165,9 @@ document.addEventListener('DOMContentLoaded', function() {
         form.addEventListener('reset', function() {
             const minPriceInput = form.querySelector('input[name="min_price"]');
             const maxPriceInput = form.querySelector('input[name="max_price"]');
-
-            // Явно встановлюємо 0
             minPriceInput.value = 0;
             maxPriceInput.value = 0;
 
-            // Додаємо submit після скидання
             setTimeout(() => {
                 form.dispatchEvent(new Event('submit'));
             }, 0);
