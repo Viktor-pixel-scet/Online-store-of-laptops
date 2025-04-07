@@ -1,6 +1,10 @@
 <?php
 session_start();
-require_once '../../backend/database/db_connection.php';
+require_once '../backend/database/Database.php';
+
+$db = new Database();
+
+$pdo = $db->getConnection();
 
 if (!isset($_SESSION['order_number']) || empty($_SESSION['order_number'])) {
     header('Location: index.php');
@@ -59,25 +63,25 @@ try {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Замовлення підтверджено - Ноутбук-Маркет</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="../../public/assets/css/style.css" rel="stylesheet">
+    <link href="assets/css/style.css" rel="stylesheet">
 </head>
 <body>
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container">
-        <a class="navbar-brand" href="../../index.php">Ноутбук-Маркет</a>
+        <a class="navbar-brand" href="../index.php">Ноутбук-Маркет</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav me-auto">
                 <li class="nav-item">
-                    <a class="nav-link" href="../../index.php">Головна</a>
+                    <a class="nav-link" href="../index.php">Головна</a>
                 </li>
             </ul>
             <ul class="navbar-nav">
                 <li class="nav-item">
-                    <a class="nav-link" href="cart.php">
+                    <a class="nav-link" href="../backend/orders/cart.php">
                         Кошик
                         <span class="badge bg-primary">
                                 <?php echo isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0; ?>
@@ -137,7 +141,7 @@ try {
                     </div>
 
                     <div class="d-grid gap-2 mt-4">
-                        <a href="../../index.php" class="btn btn-primary btn-lg">Продовжити покупки</a>
+                        <a href="../index.php" class="btn btn-primary btn-lg">Продовжити покупки</a>
                     </div>
                 </div>
             </div>
@@ -160,6 +164,6 @@ try {
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="../../public/assets/js/script.js"></script>
+<script type="module" src="assets/js/main.js"></script>
 </body>
 </html>

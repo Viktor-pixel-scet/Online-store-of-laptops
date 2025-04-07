@@ -1,6 +1,10 @@
 <?php
 session_start();
-require_once '../../backend/database/db_connection.php';
+require_once '../../backend/database/Database.php';
+
+$db = new Database();
+
+$pdo = $db->getConnection();
 
 if (!isset($_SESSION['cart']) || empty($_SESSION['cart'])) {
     header('Location: cart.php');
@@ -106,7 +110,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'customer' => $form_data
         ];
 
-        header('Location: process_order.php');
+        header('Location: ../../public/process_order.php');
         exit;
     }
 }
@@ -280,6 +284,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="../../public/assets/js/script.js"></script>
+<script type="module" src="../../public/assets/js/main.js"></script>
 </body>
 </html>
