@@ -36,7 +36,11 @@ function renderProductBadges($product) {
 }
 
 try {
-    require_once '../../backend/database/db_connection.php';
+    require_once '../../backend/database/Database.php';
+
+    $db = new Database();
+
+    $pdo = $db->getConnection();
 
     if (!isset($_SESSION['cart'])) {
         $_SESSION['cart'] = [];
@@ -323,7 +327,23 @@ try {
 <div class="image-zoom-container"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="../../public/assets/js/script.js"></script>
+<script type="module" src="../../public/assets/js/main.js"></script>
 
+<script>
+    function changeMainImage(thumbnail) {
+        const mainImage = document.querySelector('.main-product-image');
+        mainImage.src = thumbnail.src;
+    }
+
+    function changeQuantity(delta) {
+        const quantityInput = document.getElementById('quantity');
+        let currentValue = parseInt(quantityInput.value);
+        let newValue = currentValue + delta;
+
+        if (newValue >= parseInt(quantityInput.min) && newValue <= parseInt(quantityInput.max)) {
+            quantityInput.value = newValue;
+        }
+    }
+</script>
 </body>
 </html>

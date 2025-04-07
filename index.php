@@ -1,6 +1,10 @@
 <?php
 session_start();
-require_once 'backend/database/db_connection.php';
+require_once 'backend/database/Database.php';
+
+$db = new Database();
+
+$pdo = $db->getConnection();
 
 if (!isset($_SESSION['cart'])) {
     $_SESSION['cart'] = [];
@@ -430,7 +434,6 @@ try {
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="public/assets/js/script.js"></script>
-<script src="public/assets/js/advanced-filter.js"></script>
+<script type="module" src="public/assets/js/main.js"></script>
 </body>
 </html>

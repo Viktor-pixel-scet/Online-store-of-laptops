@@ -1,6 +1,10 @@
 <?php
 session_start();
-require_once '../../backend/database/db_connection.php';
+require_once '../../backend/database/Database.php';
+
+$db = new Database();
+
+$pdo = $db->getConnection();
 
 if (!isset($_SESSION['cart'])) {
     $_SESSION['cart'] = [];
@@ -79,7 +83,7 @@ if (isset($_GET['action']) && isset($_GET['id'])) {
                     }
                 }
 
-                $_SESSION['cart'] = array_values($_SESSION['cart']); // Reindex array
+                $_SESSION['cart'] = array_values($_SESSION['cart']);
                 header('Location: cart.php');
                 exit;
             }
@@ -87,7 +91,6 @@ if (isset($_GET['action']) && isset($_GET['id'])) {
             if ($_GET['action'] === 'increase') {
                 foreach ($_SESSION['cart'] as &$item) {
                     if ($item['id'] == $product_id) {
-                        // Check if requested quantity is available
                         if ($item['quantity'] < $product['stock']) {
                             $item['quantity']++;
                         } else {
@@ -263,6 +266,6 @@ foreach ($cart_items as $item) {
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="../../public/assets/js/script.js"></script>
+<script type="module" src="../../public/assets/js/main.js"></script>
 </body>
 </html>

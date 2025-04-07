@@ -5,7 +5,11 @@ ini_set('display_errors', 1);
 session_start();
 
 try {
-    require_once '../../backend/database/db_connection.php';
+    require_once '../../backend/database/Database.php';
+
+    $db = new Database();
+
+    $pdo = $db->getConnection();
 
     $product_ids = isset($_GET['products']) ? explode(',', $_GET['products']) : [];
     $product_ids = array_map(function($id) {
