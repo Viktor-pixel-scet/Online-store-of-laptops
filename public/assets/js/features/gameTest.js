@@ -73,7 +73,7 @@ const GameTestManager = {
         modal.setAttribute('data-product-id', productId);
     },
     fetchGamesForTesting: function() {
-        fetch('backend/products/get-games.php')
+        fetch('backend/games_testing/get-games.php')
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Network response was not ok');

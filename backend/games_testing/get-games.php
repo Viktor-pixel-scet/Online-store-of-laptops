@@ -1,5 +1,6 @@
 <?php
-require_once '../../backend/database/Database.php';
+// Виправлений шлях до файлу бази даних
+require_once __DIR__ . '/../database/Database.php';
 
 function getDatabaseConnection() {
     $db = new Database();
@@ -11,11 +12,14 @@ function getDatabaseConnection() {
 }
 
 function getGames($pdo) {
-    $stmt = $pdo->prepare("SELECT game_code, game_name, min_fps, max_fps, category FROM games");
-    if (!$stmt->execute()) {
-        throw new PDOException('Не вдалося виконати запит');
+    try {
+        $stmt = $pdo->prepare("SELECT game_code, game_name, min_fps, max_fps, category FROM games");
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        error_log('Помилка запиту до таблиці games: ' . $e->getMessage());
+        throw $e;
     }
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
 function handleRequest() {
@@ -23,7 +27,6 @@ function handleRequest() {
 
     try {
         $pdo = getDatabaseConnection();
-
         $games = getGames($pdo);
 
         if (empty($games)) {
@@ -57,5 +60,6 @@ function handleRequest() {
     }
 }
 
+// Запустити обробку запиту
 handleRequest();
 ?>

@@ -6,6 +6,7 @@
       <sourceFolder url="file://$MODULE_DIR$/src/Helpers" isTestSource="false" packagePrefix="Helpers\" />
       <sourceFolder url="file://$MODULE_DIR$/src/Models" isTestSource="false" packagePrefix="Models\" />
       <sourceFolder url="file://$MODULE_DIR$/src/Views" isTestSource="false" packagePrefix="Views\" />
+      <sourceFolder url="file://$MODULE_DIR$/backend" isTestSource="false" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
