@@ -77,32 +77,32 @@ class ProductFilterManager {
         const minPrice = parseFloat(minPriceInput.value);
         const maxPrice = parseFloat(maxPriceInput.value);
 
-        if (isNaN(minPrice) || isNaN(maxPrice)) {
-            this.displayErrorMessage(this.ERROR_MESSAGES.invalidInput);
-            this.logError('ValidationError', {
-                input: { minPrice, maxPrice }
-            });
-            return false;
-        }
-
-        if (minPrice < 0 || maxPrice < 0) {
-            this.displayErrorMessage(this.ERROR_MESSAGES.negativePrice);
-            this.logError('ValidationError', {
-                input: { minPrice, maxPrice }
-            });
-            return false;
-        }
-
-        if (maxPrice > 0 && minPrice > maxPrice) {
-            this.displayErrorMessage(this.ERROR_MESSAGES.invalidPriceRange);
-            this.logError('ValidationError', {
-                input: { minPrice, maxPrice }
-            });
+        const validationError = this.getPriceValidationError(minPrice, maxPrice);
+        if (validationError) {
+            this.displayErrorMessage(this.ERROR_MESSAGES[validationError]);
+            this.logError('ValidationError', { input: { minPrice, maxPrice } });
             return false;
         }
 
         return true;
     }
+
+    getPriceValidationError(minPrice, maxPrice) {
+        if (isNaN(minPrice) || isNaN(maxPrice)) {
+            return 'invalidInput';
+        }
+
+        if (minPrice < 0 || maxPrice < 0) {
+            return 'negativePrice';
+        }
+
+        if (maxPrice > 0 && minPrice > maxPrice) {
+            return 'invalidPriceRange';
+        }
+
+        return null;
+    }
+
 
     fetchProducts(formData) {
         const controller = new AbortController();
