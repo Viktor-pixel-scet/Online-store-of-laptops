@@ -47,41 +47,55 @@ if (isset($_GET['max_weight']) && is_numeric($_GET['max_weight'])) {
 }
 
 try {
-
+    // Базовий SQL-запит для отримання продуктів
     $sql = "SELECT p.*, pi.image_filename
             FROM products p
             LEFT JOIN product_images pi ON p.id = pi.product_id
             WHERE p.stock > 0 
-            AND p.price >= ? AND p.price <= ?
-            AND p.device_weight >= ? AND p.device_weight <= ?";
+            AND p.price >= :min_price 
+            AND p.price <= :max_price
+            AND p.device_weight >= :min_weight 
+            AND p.device_weight <= :max_weight";
 
-    $params = [$min_price, $max_price, $min_weight, $max_weight];
+    // Масив параметрів для запиту
+    $params = [
+        ':min_price' => $min_price,
+        ':max_price' => $max_price,
+        ':min_weight' => $min_weight,
+        ':max_weight' => $max_weight
+    ];
 
+    // Додавання фільтрів для діагоналі екрану, типу відеокарти і накопичувача
     if (!empty($screen_sizes)) {
-        $placeholders = implode(',', array_fill(0, count($screen_sizes), '?'));
-        $sql .= " AND p.screen_size IN ($placeholders)";
+        $screen_sizes_placeholders = implode(',', array_fill(0, count($screen_sizes), '?'));
+        $sql .= " AND p.screen_size IN ($screen_sizes_placeholders)";
         $params = array_merge($params, $screen_sizes);
     }
 
     if (!empty($video_card_types)) {
-        $placeholders = implode(',', array_fill(0, count($video_card_types), '?'));
-        $sql .= " AND p.video_card_type IN ($placeholders)";
+        $video_card_types_placeholders = implode(',', array_fill(0, count($video_card_types), '?'));
+        $sql .= " AND p.video_card_type IN ($video_card_types_placeholders)";
         $params = array_merge($params, $video_card_types);
     }
 
     if (!empty($storage_types)) {
-        $placeholders = implode(',', array_fill(0, count($storage_types), '?'));
-        $sql .= " AND p.storage_type IN ($placeholders)";
+        $storage_types_placeholders = implode(',', array_fill(0, count($storage_types), '?'));
+        $sql .= " AND p.storage_type IN ($storage_types_placeholders)";
         $params = array_merge($params, $storage_types);
     }
 
+    // Додавання сортування (це можна зробити за потреби)
     $sql .= " ORDER BY p.price";
 
+    // Підготовка SQL-запиту
     $stmt = $pdo->prepare($sql);
-    $stmt->execute($params);
+    $stmt->execute($params);  // Виконання запиту з параметрами
+
+    // Отримання результатів
     $products = $stmt->fetchAll();
 
 } catch (PDOException $e) {
+    // Логування помилки
     error_log('Error fetching products: ' . $e->getMessage());
     $products = [];
 }
@@ -89,6 +103,7 @@ try {
 
 <!DOCTYPE html>
 <html lang="uk">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -190,7 +205,7 @@ try {
             background-color: #fff;
             border: 1px solid #ced4da;
             border-radius: 4px;
-            padding: 0.375rem ;
+            padding: 0.375rem;
             transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
         }
 
@@ -270,170 +285,166 @@ try {
         }
     </style>
 </head>
+
 <body>
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <div class="container">
-        <a class="navbar-brand" href="index.php">Ноутбук-Маркет</a>
-        <div class="navbar-nav ms-auto">
-            <a class="nav-link" href="backend/orders/cart.php">
-                Кошик
-                <span class="badge bg-primary"><?php echo count($_SESSION['cart']); ?></span>
-            </a>
-            <a class="nav-link disabled" href="backend/utils/compare.php" id="compare-link">
-                Порівняти
-                <span class="badge bg-secondary" id="compare-count">0</span>
-            </a>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="index.php">Ноутбук-Маркет</a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="backend/orders/cart.php">
+                    Кошик
+                    <span class="badge bg-primary"><?php echo count($_SESSION['cart']); ?></span>
+                </a>
+                <a class="nav-link disabled" href="backend/utils/compare.php" id="compare-link">
+                    Порівняти
+                    <span class="badge bg-secondary" id="compare-count">0</span>
+                </a>
+            </div>
         </div>
-    </div>
-</nav>
+    </nav>
 
-<div class="container my-5">
-    <div class="row">
-        <div class="col-md-3">
-            <form id="advanced-filter" method="get">
-                <h4>Фільтри</h4>
+    <div class="container my-5">
+        <div class="row">
+            <div class="col-md-3">
+                <form id="advanced-filter" method="get">
+                    <h4>Фільтри</h4>
 
-                <div class="mb-3">
-                    <label>Ціна</label>
-                    <div class="input-group">
-                        <input type="number" name="min_price" class="form-control" placeholder="Від"
-                               value="<?php echo $min_price; ?>">
-                        <input type="number" name="max_price" class="form-control" placeholder="До"
-                               value="<?php echo $max_price; ?>">
-                    </div>
-                </div>
-
-                <div class="mb-3">
-                    <label>Діагональ екрану</label>
-                    <div>
-                        <input type="checkbox" name="screen_sizes[]" value="13.3" id="screen-13">
-                        <label for="screen-13">13.3"</label>
-                        <input type="checkbox" name="screen_sizes[]" value="15.6" id="screen-15.6">
-                        <label for="screen-15.6">15.6"</label>
-                        <input type="checkbox" name="screen_sizes[]" value="16" id="screen-16">
-                        <label for="screen-16">16"</label>
-                    </div>
-                </div>
-
-                <div class="mb-3">
-                    <label>Тип відеокарти</label>
-                    <div>
-                        <input type="checkbox" name="video_card_types[]" value="Integrated" id="integrated">
-                        <label for="integrated">Вбудована</label>
-                        <input type="checkbox" name="video_card_types[]" value="Discrete" id="discrete">
-                        <label for="discrete">Дискретна</label>
-                    </div>
-                </div>
-
-                <div class="mb-3">
-                    <label>Тип накопичувача</label>
-                    <div>
-                        <input type="checkbox" name="storage_types[]" value="SSD" id="ssd">
-                        <label for="ssd">SSD</label>
-                        <input type="checkbox" name="storage_types[]" value="HDD" id="hdd">
-                        <label for="hdd">HDD</label>
-                        <input type="checkbox" name="storage_types[]" value="SSD+HDD" id="ssd-hdd">
-                        <label for="ssd-hdd">SSD+HDD</label>
-                    </div>
-                </div>
-
-                <div class="mb-3">
-                    <label>Вага пристрою (кг)</label>
-                    <div class="input-group">
-                        <input type="number" step="0.1" name="min_weight" class="form-control" placeholder="Від"
-                               value="<?php echo $min_weight; ?>">
-                        <input type="number" step="0.1" name="max_weight" class="form-control" placeholder="До"
-                               value="<?php echo $max_weight; ?>">
-                    </div>
-                </div>
-
-                <button type="submit" class="btn btn-primary">Застосувати фільтри</button>
-                <button type="reset" class="btn btn-secondary">Скинути</button>
-            </form>
-        </div>
-
-        <div class="col-md-9">
-            <div class="row">
-                <?php if (empty($products)): ?>
-                    <div class="col-12">
-                        <div class="alert alert-info">
-                            Товари за вказаними параметрами не знайдено.
+                    <div class="mb-3">
+                        <label>Ціна</label>
+                        <div class="input-group">
+                            <input type="number" name="min_price" class="form-control" placeholder="Від"
+                                value="<?php echo $min_price; ?>">
+                            <input type="number" name="max_price" class="form-control" placeholder="До"
+                                value="<?php echo $max_price; ?>">
                         </div>
                     </div>
-                <?php else: ?>
-                    <?php foreach ($products as $product): ?>
-                        <div class="col-md-4 mb-4">
-                            <div class="card h-100" data-product-id="<?php echo $product['id']; ?>">
-                                <img src="<?php echo htmlspecialchars($product['image_filename'] ?? ''); ?>"
-                                     class="card-img-top"
-                                     alt="<?php echo htmlspecialchars($product['name'] ?? ''); ?>">
-                                <div class="card-body">
-                                    <h5 class="card-title"><?php echo htmlspecialchars($product['name']); ?></h5>
-                                    <p class="card-text"><?php echo htmlspecialchars($product['description']); ?></p>
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <span class="h5 text-primary">
-                                            <?php echo number_format($product['price'], 2, '.', ' '); ?> грн
-                                        </span>
-                                        <div class="btn-group">
-                                            <a href="backend/products/product.php?id=<?php echo $product['id']; ?>" class="btn btn-outline-secondary me-2">
-                                                <i class="bi bi-info-circle"></i> Детальніше
-                                            </a>
-                                            <button
-                                                    type="button"
-                                                    class="btn btn-outline-secondary compare-toggle"
+
+                    <div class="mb-3">
+                        <label>Діагональ екрану</label>
+                        <div>
+                            <input type="checkbox" name="screen_sizes[]" value="13.3" id="screen-13">
+                            <label for="screen-13">13.3"</label>
+                            <input type="checkbox" name="screen_sizes[]" value="15.6" id="screen-15.6">
+                            <label for="screen-15.6">15.6"</label>
+                            <input type="checkbox" name="screen_sizes[]" value="16" id="screen-16">
+                            <label for="screen-16">16"</label>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label>Тип відеокарти</label>
+                        <div>
+                            <input type="checkbox" name="video_card_types[]" value="Integrated" id="integrated">
+                            <label for="integrated">Вбудована</label>
+                            <input type="checkbox" name="video_card_types[]" value="Discrete" id="discrete">
+                            <label for="discrete">Дискретна</label>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label>Тип накопичувача</label>
+                        <div>
+                            <input type="checkbox" name="storage_types[]" value="SSD" id="ssd">
+                            <label for="ssd">SSD</label>
+                            <input type="checkbox" name="storage_types[]" value="HDD" id="hdd">
+                            <label for="hdd">HDD</label>
+                            <input type="checkbox" name="storage_types[]" value="SSD+HDD" id="ssd-hdd">
+                            <label for="ssd-hdd">SSD+HDD</label>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label>Вага пристрою (кг)</label>
+                        <div class="input-group">
+                            <input type="number" step="0.1" name="min_weight" class="form-control" placeholder="Від"
+                                value="<?php echo $min_weight; ?>">
+                            <input type="number" step="0.1" name="max_weight" class="form-control" placeholder="До"
+                                value="<?php echo $max_weight; ?>">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Застосувати фільтри</button>
+                    <button type="reset" class="btn btn-secondary">Скинути</button>
+                </form>
+            </div>
+
+            <div class="col-md-9">
+                <div class="row">
+                    <?php if (empty($products)): ?>
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                Товари за вказаними параметрами не знайдено.
+                            </div>
+                        </div>
+                    <?php else: ?>
+                        <?php foreach ($products as $product): ?>
+                            <div class="col-md-4 mb-4">
+                                <div class="card h-100" data-product-id="<?php echo $product['id']; ?>">
+                                    <img src="<?php echo htmlspecialchars($product['image_filename'] ?? ''); ?>"
+                                        class="card-img-top" alt="<?php echo htmlspecialchars($product['name'] ?? ''); ?>">
+                                    <div class="card-body">
+                                        <h5 class="card-title"><?php echo htmlspecialchars($product['name']); ?></h5>
+                                        <p class="card-text"><?php echo htmlspecialchars($product['description']); ?></p>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="h5 text-primary">
+                                                <?php echo number_format($product['price'], 2, '.', ' '); ?> грн
+                                            </span>
+                                            <div class="btn-group">
+                                                <a href="backend/products/product.php?id=<?php echo $product['id']; ?>"
+                                                    class="btn btn-outline-secondary me-2">
+                                                    <i class="bi bi-info-circle"></i> Детальніше
+                                                </a>
+                                                <button type="button" class="btn btn-outline-secondary compare-toggle"
                                                     data-product-id="<?php echo $product['id']; ?>"
-                                                    data-product-name="<?php echo htmlspecialchars($product['name']); ?>"
-                                            >
-                                                <i class="bi bi-plus-square"></i> Порівняти
-                                            </button>
-                                            <a
-                                                    href="backend/orders/cart.php?action=add&id=<?php echo $product['id']; ?>"
-                                                    class="btn btn-primary"
-                                            >
-                                                <i class="bi bi-cart-plus"></i> В кошик
-                                            </a>
+                                                    data-product-name="<?php echo htmlspecialchars($product['name']); ?>">
+                                                    <i class="bi bi-plus-square"></i> Порівняти
+                                                </button>
+                                                <a href="backend/orders/cart.php?action=add&id=<?php echo $product['id']; ?>"
+                                                    class="btn btn-primary">
+                                                    <i class="bi bi-cart-plus"></i> В кошик
+                                                </a>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="mt-2 text-center">
-                                        <button
-                                                type="button"
-                                                class="btn btn-outline-info performance-test-btn w-100"
-                                        >
-                                            <i class="bi bi-controller"></i> Тест продуктивності
-                                        </button>
+                                        <div class="mt-2 text-center">
+                                            <button type="button" class="btn btn-outline-info performance-test-btn w-100">
+                                                <i class="bi bi-controller"></i> Тест продуктивності
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    <?php endforeach; ?>
-                <?php endif; ?>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<div class="modal fade" id="compareModal" tabindex="-1" role="dialog" aria-labelledby="compareModalTitle" aria-describedby="compareModalDescription">
-    <div class="modal-dialog modal-xl">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="compareModalTitle">Товари для порівняння</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрити">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body" id="compareModalDescription">
-                <div class="comparison-list row"></div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрити</button>
-                <a href="backend/utils/compare.php" class="btn btn-primary disabled" id="full-compare-link">Повна таблиця порівняння</a>
+    <div class="modal fade" id="compareModal" tabindex="-1" role="dialog" aria-labelledby="compareModalTitle"
+        aria-describedby="compareModalDescription">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="compareModalTitle">Товари для порівняння</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрити">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="compareModalDescription">
+                    <div class="comparison-list row"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрити</button>
+                    <a href="backend/utils/compare.php" class="btn btn-primary disabled" id="full-compare-link">Повна
+                        таблиця порівняння</a>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script type="module" src="public/assets/js/main.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module" src="public/assets/js/main.js"></script>
 </body>
+
 </html>
