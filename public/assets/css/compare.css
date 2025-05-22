@@ -1,0 +1,12 @@
+.table-compare th,
+.table-compare td {
+  vertical-align: middle;
+  text-align: center;
+}
+.table-compare thead th {
+  background-color: #f8f9fa;
+}
+.remove-compare {
+  float: right;
+  font-size: 0.9rem;
+}
