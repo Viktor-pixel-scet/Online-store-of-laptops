@@ -3,61 +3,34 @@ session_start();
 require_once 'backend/database/Database.php';
 
 $db = new Database();
-
 $pdo = $db->getConnection();
 
-if (!isset($_SESSION['cart'])) {
-    $_SESSION['cart'] = [];
+$_SESSION['cart'] = $_SESSION['cart'] ?? [];
+
+function getFloatParam(string $key, float $default = 0): float {
+    return isset($_GET[$key]) && is_numeric($_GET[$key]) ? floatval($_GET[$key]) : $default;
 }
 
-$min_price = 0;
-$max_price = 100000;
-$screen_sizes = [];
-$video_card_types = [];
-$storage_types = [];
-$min_weight = 0;
-$max_weight = 10;
-
-if (isset($_GET['min_price']) && is_numeric($_GET['min_price'])) {
-    $min_price = floatval($_GET['min_price']);
+function getArrayParam(string $key): array {
+    return isset($_GET[$key]) && is_array($_GET[$key]) ? $_GET[$key] : [];
 }
 
-if (isset($_GET['max_price']) && is_numeric($_GET['max_price']) && $_GET['max_price'] > 0) {
-    $max_price = floatval($_GET['max_price']);
-}
-
-if (isset($_GET['screen_sizes']) && is_array($_GET['screen_sizes'])) {
-    $screen_sizes = array_map('floatval', $_GET['screen_sizes']);
-}
-
-if (isset($_GET['video_card_types']) && is_array($_GET['video_card_types'])) {
-    $video_card_types = $_GET['video_card_types'];
-}
-
-if (isset($_GET['storage_types']) && is_array($_GET['storage_types'])) {
-    $storage_types = $_GET['storage_types'];
-}
-
-if (isset($_GET['min_weight']) && is_numeric($_GET['min_weight'])) {
-    $min_weight = floatval($_GET['min_weight']);
-}
-
-if (isset($_GET['max_weight']) && is_numeric($_GET['max_weight'])) {
-    $max_weight = floatval($_GET['max_weight']);
-}
+$min_price = getFloatParam('min_price', 0);
+$max_price = getFloatParam('max_price', 100000);
+$screen_sizes = array_map('floatval', getArrayParam('screen_sizes'));
+$video_card_types = getArrayParam('video_card_types');
+$storage_types = getArrayParam('storage_types');
+$min_weight = getFloatParam('min_weight', 0);
+$max_weight = getFloatParam('max_weight', 10);
 
 try {
-    // Базовий SQL-запит для отримання продуктів
     $sql = "SELECT p.*, pi.image_filename
             FROM products p
             LEFT JOIN product_images pi ON p.id = pi.product_id
             WHERE p.stock > 0 
-            AND p.price >= :min_price 
-            AND p.price <= :max_price
-            AND p.device_weight >= :min_weight 
-            AND p.device_weight <= :max_weight";
+            AND p.price BETWEEN :min_price AND :max_price
+            AND p.device_weight BETWEEN :min_weight AND :max_weight";
 
-    // Масив параметрів для запиту
     $params = [
         ':min_price' => $min_price,
         ':max_price' => $max_price,
@@ -65,42 +38,36 @@ try {
         ':max_weight' => $max_weight
     ];
 
-    // Додавання фільтрів для діагоналі екрану, типу відеокарти і накопичувача
-    if (!empty($screen_sizes)) {
-        $screen_sizes_placeholders = implode(',', array_fill(0, count($screen_sizes), '?'));
-        $sql .= " AND p.screen_size IN ($screen_sizes_placeholders)";
-        $params = array_merge($params, $screen_sizes);
+    $inClauses = [
+        'screen_sizes' => ['column' => 'p.screen_size', 'values' => $screen_sizes],
+        'video_card_types' => ['column' => 'p.video_card_type', 'values' => $video_card_types],
+        'storage_types' => ['column' => 'p.storage_type', 'values' => $storage_types],
+    ];
+
+    foreach ($inClauses as $key => $clause) {
+        if (!empty($clause['values'])) {
+            $placeholders = [];
+            foreach ($clause['values'] as $i => $value) {
+                $placeholder = ":{$key}_$i";
+                $placeholders[] = $placeholder;
+                $params[$placeholder] = $value;
+            }
+            $sql .= " AND {$clause['column']} IN (" . implode(', ', $placeholders) . ")";
+        }
     }
 
-    if (!empty($video_card_types)) {
-        $video_card_types_placeholders = implode(',', array_fill(0, count($video_card_types), '?'));
-        $sql .= " AND p.video_card_type IN ($video_card_types_placeholders)";
-        $params = array_merge($params, $video_card_types);
-    }
-
-    if (!empty($storage_types)) {
-        $storage_types_placeholders = implode(',', array_fill(0, count($storage_types), '?'));
-        $sql .= " AND p.storage_type IN ($storage_types_placeholders)";
-        $params = array_merge($params, $storage_types);
-    }
-
-    // Додавання сортування (це можна зробити за потреби)
     $sql .= " ORDER BY p.price";
 
-    // Підготовка SQL-запиту
     $stmt = $pdo->prepare($sql);
-    $stmt->execute($params);  // Виконання запиту з параметрами
-
-    // Отримання результатів
+    $stmt->execute($params);
     $products = $stmt->fetchAll();
 
 } catch (PDOException $e) {
-    // Логування помилки
     error_log('Error fetching products: ' . $e->getMessage());
     $products = [];
 }
 ?>
-
+    
 <!DOCTYPE html>
 <html lang="uk">
 
