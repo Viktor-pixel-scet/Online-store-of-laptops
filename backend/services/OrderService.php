@@ -7,6 +7,11 @@ use Repositories\CustomerRepository;
 use Repositories\OrderRepository;
 use Repositories\ProductRepository;
 use PDO;
+use Services\Handlers\GenerateOrderNumberHandler;
+use Services\Handlers\CreateCustomerHandler;
+use Services\Handlers\CreateOrderHandler;
+use Services\Handlers\AddItemsHandler;
+use Services\Handlers\ReduceStockHandler;
 
 class OrderService
 {
@@ -29,28 +34,31 @@ class OrderService
 
     public function process(OrderDTO $orderDTO): string
     {
-        $orderNumber = 'ORDER-' . date('YmdHis') . '-' . mt_rand(1000, 9999);
+        $context = [];
+
+        // Створюємо обробники і формуємо ланцюжок
+        $generate = new GenerateOrderNumberHandler();
+        $createCustomer = new CreateCustomerHandler($this->customerRepo);
+        $createOrder = new CreateOrderHandler($this->orderRepo);
+        $addItems = new AddItemsHandler($this->orderRepo);
+        $reduceStock = new ReduceStockHandler($this->productRepo);
+
+        $generate->setNext($createCustomer)
+            ->setNext($createOrder)
+            ->setNext($addItems)
+            ->setNext($reduceStock);
 
         try {
             $this->db->beginTransaction();
 
-            $customerId = $this->customerRepo->create($orderDTO->customer);
-            $orderId = $this->orderRepo->create(
-                $orderNumber,
-                $customerId,
-                $orderDTO->totalPrice,
-                $orderDTO->customer['payment_method']
-            );
-
-            foreach ($orderDTO->items as $item) {
-                $this->orderRepo->addItem($orderId, $item['id'], $item['quantity'], $item['price']);
-                $this->productRepo->reduceStock($item['id'], $item['quantity']);
-            }
+            // Запускаємо обробку ланцюжка
+            $generate->handle($orderDTO, $context);
 
             $this->db->commit();
-            return $orderNumber;
 
-        } catch (\PDOException $e) {
+            return $context['order_number'];
+
+        } catch (\Throwable $e) {
             $this->db->rollBack();
             error_log('Order processing error: ' . $e->getMessage());
             throw new \Exception('Order processing failed.');
