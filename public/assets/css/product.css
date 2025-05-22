@@ -1,0 +1,29 @@
+.image-thumbnails img {
+  transition: all 0.3s ease;
+  cursor: zoom-in;
+}
+.image-thumbnails img:hover {
+  opacity: 0.7;
+  transform: scale(1.05);
+}
+.main-product-image {
+  cursor: zoom-in;
+}
+.image-zoom-container {
+  position: fixed;
+  top: 50%;
+  right: 20px;
+  transform: translateY(-50%);
+  width: 300px;
+  height: 300px;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  border: 2px solid #007bff;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 1000;
+  pointer-events: none;
+}

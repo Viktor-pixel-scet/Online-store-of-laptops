@@ -60,6 +60,6 @@ function handleRequest() {
     }
 }
 
-// Запустити обробку запиту
+
 handleRequest();
 ?>
