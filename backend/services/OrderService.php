@@ -7,6 +7,7 @@ use Repositories\CustomerRepository;
 use Repositories\OrderRepository;
 use Repositories\ProductRepository;
 use PDO;
+use Services\Handlers\CalculateTotalHandler;
 use Services\Handlers\GenerateOrderNumberHandler;
 use Services\Handlers\CreateCustomerHandler;
 use Services\Handlers\CreateOrderHandler;
@@ -21,11 +22,12 @@ class OrderService
     private ProductRepository $productRepo;
 
     public function __construct(
-        PDO $db,
+        PDO                $db,
         CustomerRepository $customerRepo,
-        OrderRepository $orderRepo,
-        ProductRepository $productRepo
-    ) {
+        OrderRepository    $orderRepo,
+        ProductRepository  $productRepo
+    )
+    {
         $this->db = $db;
         $this->customerRepo = $customerRepo;
         $this->orderRepo = $orderRepo;
@@ -36,23 +38,35 @@ class OrderService
     {
         $context = [];
 
-        // Створюємо обробники і формуємо ланцюжок
-        $generate = new GenerateOrderNumberHandler();
-        $createCustomer = new CreateCustomerHandler($this->customerRepo);
-        $createOrder = new CreateOrderHandler($this->orderRepo);
-        $addItems = new AddItemsHandler($this->orderRepo);
-        $reduceStock = new ReduceStockHandler($this->productRepo);
+        // тепер збираємо ланцюжок динамічно з масиву налаштувань
+        $handlers = [
+            GenerateOrderNumberHandler::class => [],
+            CreateCustomerHandler::class => [$this->customerRepo],
+            CreateOrderHandler::class => [$this->orderRepo],
+            CalculateTotalHandler::class => [],
+            AddItemsHandler::class => [$this->orderRepo],
+            ReduceStockHandler::class => [$this->productRepo],
+        ];
 
-        $generate->setNext($createCustomer)
-            ->setNext($createOrder)
-            ->setNext($addItems)
-            ->setNext($reduceStock);
+        $first = null;
+        $prev = null;
+        foreach ($handlers as $class => $deps) {
+            /** @var \Services\Handlers\AbstractOrderHandler $h */
+            $h = new $class(...$deps);
+            if ($first === null) {
+                $first = $h;
+            }
+            if ($prev !== null) {
+                $prev->setNext($h);
+            }
+            $prev = $h;
+        }
 
         try {
             $this->db->beginTransaction();
 
             // Запускаємо обробку ланцюжка
-            $generate->handle($orderDTO, $context);
+            $first->handle($orderDTO, $context);
 
             $this->db->commit();
 
