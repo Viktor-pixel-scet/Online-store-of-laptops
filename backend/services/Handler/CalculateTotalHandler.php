@@ -1,6 +1,6 @@
 <?php
 
-namespace Services\Handler;
+namespace Services\Handlers;
 use DTO\OrderDTO;
 use Services\Handlers\AbstractOrderHandler;
 
