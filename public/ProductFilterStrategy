@@ -1,0 +1,154 @@
+<?php
+
+class OrderNotFoundException extends Exception
+{
+    public function __construct(string $orderNumber = "")
+    {
+        $message = $orderNumber 
+            ? "Order with number '{$orderNumber}' was not found"
+            : "Order was not found";
+        parent::__construct($message);
+    }
+}
+
+class OrderRetrievalCommand
+{
+    private PDO $pdo;
+    private string $orderNumber;
+
+    public function __construct(PDO $pdo, string $orderNumber)
+    {
+        $this->pdo = $pdo;
+        $this->orderNumber = $this->validateOrderNumber($orderNumber);
+    }
+
+    public function execute(): array
+    {
+        $orderData = $this->fetchOrderData();
+        $orderItems = $this->fetchOrderItems($orderData['id']);
+        
+        return $this->buildOrderStructure($orderData, $orderItems);
+    }
+
+    private function validateOrderNumber(string $orderNumber): string
+    {
+        $orderNumber = trim($orderNumber);
+        
+        if (empty($orderNumber)) {
+            throw new InvalidArgumentException('Order number cannot be empty');
+        }
+        
+        if (strlen($orderNumber) < 5 || strlen($orderNumber) > 50) {
+            throw new InvalidArgumentException('Order number must be between 5 and 50 characters');
+        }
+        
+        return $orderNumber;
+    }
+
+    private function fetchOrderData(): array
+    {
+        try {
+            $stmt = $this->pdo->prepare("
+                SELECT o.id, o.order_number, o.total_amount, o.created_at, o.payment_method,
+                       c.name, c.email, c.phone, c.address 
+                FROM orders o 
+                JOIN customers c ON o.customer_id = c.id 
+                WHERE o.order_number = ?
+            ");
+            
+            $stmt->execute([$this->orderNumber]);
+            $orderData = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$orderData) {
+                throw new OrderNotFoundException($this->orderNumber);
+            }
+
+            return $orderData;
+            
+        } catch (PDOException $e) {
+            error_log('Error fetching order data: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    private function fetchOrderItems(int $orderId): array
+    {
+        try {
+            $stmt = $this->pdo->prepare("
+                SELECT oi.id, oi.product_id, oi.quantity, oi.price, oi.total_price,
+                       p.name, p.description 
+                FROM order_items oi 
+                JOIN products p ON oi.product_id = p.id 
+                WHERE oi.order_id = ?
+                ORDER BY oi.id
+            ");
+            
+            $stmt->execute([$orderId]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+        } catch (PDOException $e) {
+            error_log('Error fetching order items: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    private function buildOrderStructure(array $orderData, array $orderItems): array
+    {
+        return [
+            'order_number' => $orderData['order_number'],
+            'total_price' => floatval($orderData['total_amount']),
+            'created_at' => $orderData['created_at'],
+            'customer' => [
+                'name' => $orderData['name'],
+                'email' => $orderData['email'],
+                'phone' => $orderData['phone'],
+                'address' => $orderData['address'],
+                'payment_method' => $orderData['payment_method']
+            ],
+            'items' => $this->processOrderItems($orderItems),
+            'items_count' => count($orderItems),
+            'formatted_total' => number_format(floatval($orderData['total_amount']), 2, '.', ' ')
+        ];
+    }
+
+    private function processOrderItems(array $orderItems): array
+    {
+        return array_map(function ($item) {
+            return [
+                'id' => $item['id'],
+                'product_id' => $item['product_id'],
+                'name' => $item['name'],
+                'description' => $item['description'] ?? '',
+                'quantity' => intval($item['quantity']),
+                'price' => floatval($item['price']),
+                'total_price' => floatval($item['total_price'] ?? ($item['price'] * $item['quantity'])),
+                'formatted_total' => number_format(
+                    floatval($item['total_price'] ?? ($item['price'] * $item['quantity'])), 
+                    2, '.', ' '
+                )
+            ];
+        }, $orderItems);
+    }
+
+    public static function getPaymentMethodText(string $paymentMethod): string
+    {
+        $paymentMethods = [
+            'cash' => 'Готівкою при отриманні',
+            'card' => 'Оплата карткою онлайн',
+            'bank_transfer' => 'Банківський переказ',
+            'online' => 'Онлайн оплата'
+        ];
+
+        return $paymentMethods[$paymentMethod] ?? 'Невідомий спосіб оплати';
+    }
+
+    public static function hasValidSession(): bool
+    {
+        return isset($_SESSION['order_number']) && !empty($_SESSION['order_number']);
+    }
+
+    public static function clearOrderSession(): void
+    {
+        unset($_SESSION['order_number']);
+    }
+}
