@@ -16,19 +16,43 @@ if (!isset($_SESSION['cart'])) {
     $_SESSION['cart'] = [];
 }
 
-function updateCartQuantity(&$cart, int $productId, int $change, int $stock)
+/**
+ * Логування дій користувача з кошиком
+ */
+function logAction(string $message): void
 {
-    foreach ($cart as &$item) {
+    $logFile = __DIR__ . '/cart_actions.log';
+    $date = date('Y-m-d H:i:s');
+    file_put_contents($logFile, "[$date] $message\n", FILE_APPEND);
+}
+
+/**
+ * Оновлення кількості товару у кошику.
+ * Видаляє товар, якщо нова кількість <= 0.
+ * 
+ * @param array &$cart посилання на масив кошика
+ * @param int $productId ID товару
+ * @param int $change зміна кількості (плюс або мінус)
+ * @param int $stock доступний запас товару
+ * @return bool|null true - кількість оновлена, false - товар видалено, null - товар не знайдено
+ * @throws InsufficientStockException при перевищенні запасу
+ */
+function updateCartQuantity(array &$cart, int $productId, int $change, int $stock)
+{
+    foreach ($cart as $key => &$item) {
         if ($item['id'] === $productId) {
             $newQuantity = $item['quantity'] + $change;
             if ($newQuantity > $stock) {
                 throw new InsufficientStockException($productId, $stock, $newQuantity);
             }
             if ($newQuantity <= 0) {
-
+                unset($cart[$key]);
+                $cart = array_values($cart);
+                logAction("Product ID $productId removed from cart due to quantity <= 0");
                 return false;
             }
             $item['quantity'] = $newQuantity;
+            logAction("Product ID $productId quantity updated to $newQuantity");
             return true;
         }
     }
@@ -43,6 +67,7 @@ try {
 
         if ($action === 'clear') {
             $_SESSION['cart'] = [];
+            logAction("Cart cleared by user");
             $_SESSION['success'] = "Кошик очищено.";
             header("Location: $redirectUrl");
             exit;
@@ -76,6 +101,7 @@ try {
                                 throw new InsufficientStockException($product_id, $product['stock'], $total_requested);
                             }
                             $item['quantity'] = $total_requested;
+                            logAction("Product ID $product_id quantity increased to $total_requested");
                             $found = true;
                             break;
                         }
@@ -87,6 +113,7 @@ try {
                             'price' => $product['price'],
                             'quantity' => $quantity
                         ];
+                        logAction("Product ID $product_id added to cart with quantity $quantity");
                     }
                     $_SESSION['success'] = "Товар додано до кошика.";
                     break;
@@ -96,6 +123,7 @@ try {
                         if ($item['id'] === $product_id) {
                             unset($_SESSION['cart'][$key]);
                             $_SESSION['cart'] = array_values($_SESSION['cart']);
+                            logAction("Product ID $product_id removed from cart");
                             $_SESSION['success'] = "Товар видалено з кошика.";
                             break;
                         }
@@ -103,7 +131,8 @@ try {
                     break;
 
                 case 'increase':
-                    if (updateCartQuantity($_SESSION['cart'], $product_id, 1, $product['stock']) === false) {
+                    $result = updateCartQuantity($_SESSION['cart'], $product_id, 1, $product['stock']);
+                    if ($result === false) {
                         throw new InsufficientStockException($product_id, $product['stock'], 1);
                     }
                     $_SESSION['success'] = "Кількість товару збільшена.";
@@ -112,7 +141,6 @@ try {
                 case 'decrease':
                     $result = updateCartQuantity($_SESSION['cart'], $product_id, -1, $product['stock']);
                     if ($result === false) {
-                        // Товар видалено із кошика, уже зроблено в updateCartQuantity
                         $_SESSION['success'] = "Товар видалено з кошика.";
                     } elseif ($result === null) {
                         throw new ProductNotFoundException($product_id);
@@ -149,7 +177,7 @@ try {
 header("Location: $redirectUrl");
 exit;
 
-
+// Обчислення загальної вартості і кількості
 $cart_items = array_values($_SESSION['cart']);
 
 $total_price = 0;
