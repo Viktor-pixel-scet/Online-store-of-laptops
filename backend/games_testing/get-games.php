@@ -23,43 +23,67 @@ function getGames($pdo) {
 }
 
 function handleRequest() {
-    header('Content-Type: application/json');
+    setJsonHeaders();
 
     try {
-        $pdo = getDatabaseConnection();
-        $games = getGames($pdo);
-
-        if (empty($games)) {
-            http_response_code(404);
-            echo json_encode([
-                'error' => 'Список ігор порожній',
-                'message' => 'Наразі немає доступних ігор'
-            ]);
-            exit;
-        }
-
-        echo json_encode($games);
+        $games = fetchGames();
+        validateGamesData($games);
+        sendSuccessResponse($games);
 
     } catch(PDOException $e) {
-        http_response_code(500);
-        error_log('Помилка бази даних: ' . $e->getMessage());
-        echo json_encode([
-            'error' => 'Технічна помилка',
-            'message' => 'Не вдалося отримати список ігор. Спробуйте пізніше.'
-        ]);
-        exit;
-
+        handleDatabaseError($e);
     } catch(Exception $e) {
-        http_response_code(500);
-        error_log('Невідома помилка: ' . $e->getMessage());
-        echo json_encode([
-            'error' => 'Критична помилка',
-            'message' => 'Виникла неочікувана помилка. Спробуйте пізніше.'
-        ]);
-        exit;
+        handleGenericError($e);
     }
 }
 
+function setJsonHeaders() {
+    header('Content-Type: application/json');
+}
+
+function fetchGames() {
+    $pdo = getDatabaseConnection();
+    return getGames($pdo);
+}
+
+function validateGamesData($games) {
+    if (empty($games)) {
+        sendEmptyGamesResponse();
+    }
+}
+
+function sendSuccessResponse($games) {
+    echo json_encode($games);
+}
+
+function sendEmptyGamesResponse() {
+    http_response_code(404);
+    echo json_encode([
+        'error' => 'Список ігор порожній',
+        'message' => 'Наразі немає доступних ігор'
+    ]);
+    exit;
+}
+
+function handleDatabaseError($e) {
+    http_response_code(500);
+    error_log('Помилка бази даних: ' . $e->getMessage());
+    echo json_encode([
+        'error' => 'Технічна помилка',
+        'message' => 'Не вдалося отримати список ігор. Спробуйте пізніше.'
+    ]);
+    exit;
+}
+
+function handleGenericError($e) {
+    http_response_code(500);
+    error_log('Невідома помилка: ' . $e->getMessage());
+    echo json_encode([
+        'error' => 'Критична помилка',
+        'message' => 'Виникла неочікувана помилка. Спробуйте пізніше.'
+    ]);
+    exit;
+}
 
 handleRequest();
 ?>
