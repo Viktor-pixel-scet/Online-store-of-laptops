@@ -174,15 +174,29 @@ try {
     $_SESSION['error'] = "Виникла помилка при обробці вашого запиту.";
 }
 
+
+session_store_cart_info();
 header("Location: $redirectUrl");
 exit;
 
-// Обчислення загальної вартості і кількості
-$cart_items = array_values($_SESSION['cart']);
-
-$total_price = 0;
-$total_quantity = 0;
-foreach ($cart_items as $item) {
-    $total_price += $item['price'] * $item['quantity'];
-    $total_quantity += $item['quantity'];
+function estimate_cart_info(array $cart_items) : array
+{
+    $total_price = 0;
+    $total_quantity = 0;
+    foreach ($cart_items as $item) {
+        $total_price += $item['price'] * $item['quantity'];
+        $total_quantity += $item['quantity'];
+    }
+    return ['cart_total' => $total_price,'cart_quantity' => $total_quantity];
+}
+function populate_cart_info(array $data) : void
+{
+    foreach ($data as $key => $value) {
+        $_SESSION[$key] = $value;
+    }
+}
+function session_store_cart_info() : void
+{
+    $info = estimate_cart_info(array_values($_SESSION['cart']));
+    populate_cart_info($info);
 }
