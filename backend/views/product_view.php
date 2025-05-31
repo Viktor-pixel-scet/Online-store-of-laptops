@@ -77,7 +77,7 @@
         </p>
 
         <?php if ((int)$product['stock'] > 0): ?>
-          <form action="/public/orders/cart.php" method="get" class="mb-4">
+          <form action="/backend/orders/cart.php" method="get" class="mb-4">
             <input type="hidden" name="action" value="add">
             <input type="hidden" name="id"     value="<?= $product['id'] ?>">
 

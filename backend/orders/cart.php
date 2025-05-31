@@ -173,16 +173,18 @@ try {
     error_log('General error: ' . $e->getMessage());
     $_SESSION['error'] = "Виникла помилка при обробці вашого запиту.";
 }
-
-header("Location: $redirectUrl");
-exit;
-
 // Обчислення загальної вартості і кількості
 $cart_items = array_values($_SESSION['cart']);
 
 $total_price = 0;
 $total_quantity = 0;
+unset($item);
 foreach ($cart_items as $item) {
     $total_price += $item['price'] * $item['quantity'];
     $total_quantity += $item['quantity'];
 }
+$_SESSION['total_price'] = $total_price;
+$_SESSION['total_quantity'] = $total_quantity;
+header("Location: $redirectUrl");
+exit;
+
